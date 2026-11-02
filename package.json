@@ -1,0 +1,20 @@
+{
+  "name": "little-prince-journey",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "小王子·星辰之旅 — iOS Safari 复刻（Three.js）",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "serve": "node tools/serve.mjs"
+  },
+  "dependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

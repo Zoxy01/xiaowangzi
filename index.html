@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>小王子 · 星辰之旅</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b1026" />
+    <meta name="description" content="一个可以在 iPhone 上走进的小王子星球。" />
+    <!-- PWA：添加到主屏幕后全屏运行，没有 Safari 地址栏 -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./assets/img/ui/icon-512.png" />
+    <link rel="preload" href="./assets/fonts/serif-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <!-- 首屏：地图之前的一切都在这里，纯 DOM，不阻塞 3D 启动 -->
+    <div id="boot" class="overlay">
+      <div class="boot-inner">
+        <h1 class="title">小王子</h1>
+        <p class="subtitle" data-i18n="小王子的旅程">小王子的旅程</p>
+        <div class="boot-bar"><i id="boot-fill"></i></div>
+        <p class="boot-status" id="boot-status">正在准备画面</p>
+        <button id="boot-start" class="btn-primary" hidden data-i18n="走进家园">走进家园</button>
+      </div>
+    </div>
+
+    <!-- 旅程地图 -->
+    <div id="map" class="overlay" hidden>
+      <canvas id="map-stars" class="map-stars" aria-hidden="true"></canvas>
+      <img class="map-bg" src="./assets/img/ui/journey-map.webp" alt="" />
+      <div class="map-nebula" aria-hidden="true"><i></i><i></i></div>
+
+      <header class="map-header">
+        <p class="map-eyebrow" data-i18n="故事，从一朵玫瑰开始">故事，从一朵玫瑰开始</p>
+        <h2 data-i18n="小王子的旅程">小王子的旅程</h2>
+        <div class="map-meter">
+          <div class="map-meter-bar"><i id="map-meter-fill"></i></div>
+          <p id="map-progress" class="map-progress"></p>
+        </div>
+      </header>
+
+      <!-- 航线：星座一样把八颗星球串起来，走过的航段会亮起来 -->
+      <svg id="map-route" class="map-route" aria-hidden="true">
+        <path id="route-base" class="route-base" d="" />
+        <path id="route-lit" class="route-lit" d="" />
+      </svg>
+
+      <div id="map-planets" class="map-planets"></div>
+
+      <div id="map-card" class="map-card">
+        <p id="map-caption" class="map-caption"></p>
+        <button id="map-act" class="btn-primary map-act" hidden></button>
+      </div>
+
+      <nav class="map-actions">
+        <button id="map-badges" class="btn-icon" aria-label="徽章">✦</button>
+        <button id="map-settings" class="btn-icon" aria-label="设置">⚙</button>
+      </nav>
+
+      <div id="map-badges-panel" class="panel badges-panel hidden" hidden>
+        <h3 data-i18n="徽章">徽章</h3>
+        <ul id="badges-list"></ul>
+        <button id="badges-close" class="btn-ghost">关闭</button>
+      </div>
+    </div>
+
+    <!-- 章节卡 -->
+    <div id="chapter-card" class="overlay center" hidden>
+      <div class="chapter-inner">
+        <p class="chapter-no" id="cc-no"></p>
+        <h2 class="chapter-title" id="cc-title"></h2>
+        <p class="chapter-sub" id="cc-sub"></p>
+      </div>
+    </div>
+
+    <!-- 游戏内 HUD -->
+    <div id="hud" hidden>
+      <button id="hud-map" class="btn-icon hud-tl" aria-label="返回地图">☰</button>
+      <button id="hud-goal" class="goal-chip hud-tl2 hidden" aria-expanded="false">
+        <span id="hud-goal-text"></span>
+      </button>
+      <div id="stamina" class="stamina hidden"><i></i></div>
+
+      <!-- 交互提示 -->
+      <button id="prompt" class="prompt hidden">
+        <span class="prompt-key" id="prompt-label"></span>
+      </button>
+
+      <!-- 移动摇杆 -->
+      <div id="stick" class="stick hidden"><i id="stick-knob"></i></div>
+      <div id="lookpad" class="lookpad"></div>
+
+      <!-- 对话 -->
+      <div id="dialogue" class="dialogue hidden">
+        <p class="speaker" id="dlg-speaker"></p>
+        <p class="line" id="dlg-line"></p>
+        <span class="advance" id="dlg-advance">▾</span>
+      </div>
+
+      <!-- 目标清单 -->
+      <div id="goals" class="panel goals hidden">
+        <h3 id="goals-title"></h3>
+        <p id="goals-sub" class="goals-sub"></p>
+        <ul id="goals-list"></ul>
+      </div>
+    </div>
+
+    <!-- 轻提示：目标完成 / 发现地点 / 收集徽章 -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- 设置 -->
+    <div id="settings" class="overlay center" hidden>
+      <div class="panel settings-panel">
+        <h2 data-i18n="设置">设置</h2>
+        <label class="row"><span data-i18n="语言">语言</span><select id="set-lang"></select></label>
+        <label class="row"><span data-i18n="主音量">主音量</span><input id="set-vol" type="range" min="0" max="1" step="0.05" /></label>
+        <label class="row"><span data-i18n="视角">视角</span><input id="set-look" type="range" min="0.4" max="2" step="0.1" /></label>
+        <label class="row"><span data-i18n="全屏">全屏</span><input id="set-fs" type="checkbox" /></label>
+        <div class="row danger">
+          <button id="set-clear" class="btn-ghost" data-i18n="清除进度">清除进度</button>
+        </div>
+        <button id="set-close" class="btn-primary" data-i18n="继续">继续</button>
+      </div>
+    </div>
+
+    <canvas id="scene"></canvas>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

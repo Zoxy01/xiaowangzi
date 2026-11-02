@@ -1,0 +1,29 @@
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  // 用相对路径构建：可以直接放在任意子目录（也方便塞进静态托管）
+  base: './',
+  build: {
+    target: 'es2020', // iOS Safari 14+ 覆盖到 iPhone 6s 一代
+    outDir: 'dist',
+    assetsInlineLimit: 2048,
+    cssCodeSplit: false,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // three 单独拆包：首屏 HTML/CSS 先渲染，three 并行下载
+        manualChunks(id) {
+          if (id.includes('node_modules/three')) return 'three';
+          return undefined;
+        },
+      },
+    },
+  },
+  server: {
+    host: true,
+    port: 5173,
+  },
+  esbuild: {
+    legalComments: 'none',
+  },
+});

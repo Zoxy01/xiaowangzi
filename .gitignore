@@ -1,0 +1,10 @@
+# 依赖与构建缓存
+node_modules/
+.tmp/
+
+# 测试产物与日志（截图/日志不入库）
+test-shots/
+*.log
+
+# 本地诊断残留
+.vite/
