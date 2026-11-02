@@ -57,6 +57,37 @@ server {
 - 首屏 gzip ≈ 1.76 MB（`three.js` 占 382 KB），首次加载在 4G 上大约 1–2 秒；之后走缓存。
 - 站点全部用相对路径，放在子目录（如 `https://host/prince/`）也能正常工作。
 
+### 挂在子路径（实测：http://111.229.202.106/xwz/）
+
+站点全部用相对路径，所以可以只挂一个 `/xwz/`，根路径留给别的项目。把这段放进
+**已有站点**的 `server {}` 里（`include /etc/nginx/snippets/xwz.conf;`），
+不要新建 `server` 块，否则同一台机器上的其他站点会被抢走默认站点：
+
+```nginx
+location = /xwz { return 301 /xwz/; }
+
+location /xwz/ {
+    alias /var/www/xwz/repo/dist/;
+    index index.html;
+    location = /xwz/index.html { add_header Cache-Control "no-store"; }
+    location ~* ^/xwz/.*\.(?:js|css)$ { add_header Cache-Control "no-cache"; }
+    location ~* ^/xwz/assets/ { add_header Cache-Control "public, max-age=604800"; }
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+    gzip_min_length 1024;
+}
+
+location = /xwz/manifest.webmanifest {
+    alias /var/www/xwz/repo/dist/manifest.webmanifest;
+    default_type application/manifest+json;
+    add_header Cache-Control "no-cache";
+}
+```
+
+更新线上内容：`cd /var/www/xwz/repo && git pull`（`dist/` 已入库，不需要在服务器上构建）。
+改完跑一次 `node tools/deploy-check.mjs`，它会用 iPhone 视口打开线上地址，
+走「开始 → 地图 → 第一章」，并报告 4xx/5xx 请求与控制台异常。
+
 ---
 
 ## 目录结构
@@ -260,6 +291,7 @@ node tools/render-check.mjs  # 首屏渲染判空
 node tools/npc-check.mjs     # 每章 NPC 是否存在、站在地面上、投影在画面内
 node tools/king-seat-check.mjs # 第二章：国王是否坐在王座座面上（胯/脚/头顶/笼子）
 node tools/king-shot.mjs     # 第二章：王座正面与近景截图 + 王座局部坐标里的身高核对
+node tools/deploy-check.mjs  # 线上地址冒烟：iPhone 视口打开、启动条、地图、第一章，收集 4xx 与控制台异常
 node tools/avatar-measure.mjs # 主角模型尺寸（纯 Node）：总高/脚底/头身比/面数，并断言脚底≈0、总高≈0.9
 node tools/avatar-check.mjs   # 主角模型：面数、手的位置、头部俯仰方向、动画不产生 NaN
 node tools/art-check.mjs     # 每章柔光层：光晕/光柱/光尘/草/花是否生效 + 三段天空色
